@@ -33,4 +33,4 @@ You can also copy the `save` folder to the `addons` share of your Home Assistant
 
 A **SAVE** egy önálló webfelület (Home Assistant addon), amivel mentést tölthetsz fel és állíthatsz vissza akkor is, ha a Home Assistant core nem indul el. Jelszó nincs, ezért csak megbízható helyi hálózaton használd, és a `4360`-as portot soha ne tedd ki az internetre. Teljes visszaállításnál a Supervisor eltávolíthatja az addont, ha nincs a mentésben, ezért az alapbeállítás a „csak konfiguráció". Telepítés: Beállítások → Addonok → Addon-áruház → ⋮ → Tárolók, és add hozzá: `https://github.com/dslytech/ha-save`.
 
-##Developed with the assistance of Anthropic Claude.
+## Developed with the assistance of Anthropic Claude.
