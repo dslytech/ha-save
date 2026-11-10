@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SAVE – Backup upload &amp; restore</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 48 48%27%3E%3Cpath d=%27M24 4 4 22h6v20h28V22h6z%27 fill=%27%2318bcf2%27/%3E%3Crect x=%2721.5%27 y=%2724%27 width=%275%27 height=%2716%27 rx=%271.2%27 fill=%27%23111%27/%3E%3Crect x=%2716%27 y=%2729.5%27 width=%2716%27 height=%275%27 rx=%271.2%27 fill=%27%23111%27/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="wrap">
+    <div class="lang" role="group" aria-label="Language">
+      <button type="button" data-lang="en">EN</button>
+      <button type="button" data-lang="hu">HU</button>
+    </div>
+
+    <header class="brand">
+      <svg viewBox="0 0 48 48" width="56" height="56" aria-hidden="true">
+        <path d="M24 4 4 22h6v20h28V22h6z" fill="#18bcf2"/>
+        <rect x="21.5" y="24" width="5" height="16" rx="1.2" fill="#111"/>
+        <rect x="16" y="29.5" width="16" height="5" rx="1.2" fill="#111"/>
+      </svg>
+      <h1>SAVE</h1>
+      <p class="muted" data-i18n="tagline">Upload and restore backups even when Home Assistant won't start</p>
+    </header>
+
+    <div id="app">
+      <div id="banner" class="banner hidden"></div>
+
+      <!-- Status -->
+      <section class="card">
+        <div class="card-head">
+          <h2 data-i18n="status_h">Status</h2>
+        </div>
+        <dl class="status">
+          <div><dt>Supervisor</dt><dd id="stSup">…</dd></div>
+          <div><dt>Home Assistant core</dt><dd id="stCore">…</dd></div>
+          <div><dt data-i18n="free_space">Free space for backups</dt><dd id="stDisk">…</dd></div>
+        </dl>
+        <div class="actions">
+          <button class="btn" data-core="check" type="button" data-i18n="btn_check">Check configuration</button>
+          <button class="btn" data-core="restart" type="button" data-i18n="btn_restart">Restart core</button>
+          <button class="btn" data-core="start" type="button" data-i18n="btn_start">Start core</button>
+        </div>
+        <p id="coreMsg" class="note"></p>
+      </section>
+
+      <!-- Upload: same look as the Home Assistant onboarding page -->
+      <section class="card big">
+        <h2 data-i18n="upload_h">Upload backup</h2>
+        <p class="sub" data-i18n="upload_sub">Upload a backup from your device</p>
+        <div id="drop" class="drop" tabindex="0">
+          <button id="pick" class="pill" type="button">
+            <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path fill="currentColor" d="M20 6h-8l-2-2H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2zm-6 10v3h-4v-3H7l5-5 5 5z"/></svg>
+            <span data-i18n="choose">Choose backup file</span>
+          </button>
+          <p class="drop-main" data-i18n="drag">Or drag and drop file here</p>
+          <p class="drop-sub" data-i18n="supports">Supports .TAR files</p>
+          <input id="file" type="file" accept=".tar" hidden>
+        </div>
+        <div id="progress" class="progress hidden">
+          <div class="bar"><div id="barFill"></div></div>
+          <p id="progressText" class="note"></p>
+        </div>
+        <p id="uploadMsg" class="note"></p>
+      </section>
+
+      <!-- Existing backups -->
+      <section class="card">
+        <div class="card-head">
+          <h2 data-i18n="backups_h">Backups on this device</h2>
+          <button id="reload" class="btn link" type="button" data-i18n="refresh">Refresh</button>
+        </div>
+        <ul id="backups" class="backups"></ul>
+        <p id="noBackups" class="note hidden" data-i18n="no_backups">No backups in the /backup folder.</p>
+      </section>
+
+      <!-- Logs -->
+      <section class="card">
+        <div class="card-head">
+          <h2 data-i18n="logs_h">Logs</h2>
+          <div class="tabs" id="logTabs">
+            <button class="btn link active" data-src="core" type="button">Core</button>
+            <button class="btn link" data-src="supervisor" type="button">Supervisor</button>
+            <button class="btn link" data-src="host" type="button" data-i18n="tab_host">Host</button>
+          </div>
+        </div>
+        <pre id="log" class="log">Click a tab to load the log.</pre>
+      </section>
+    </div>
+  </main>
+
+  <!-- Restore dialog -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="mTitle">
+    <div class="card dialog">
+      <h2 id="mTitle" data-i18n="restore_h">Restore</h2>
+      <dl id="mInfo" class="info"></dl>
+      <fieldset>
+        <label class="opt"><input type="radio" name="mode" value="config" checked>
+          <span><b data-i18n="opt_config">Home Assistant configuration only</b> <span data-i18n="recommended">(recommended)</span><br>
+          <small data-i18n="opt_config_sub">Does not touch add-ons or SAVE.</small></span></label>
+        <label class="opt"><input type="radio" name="mode" value="full">
+          <span><b data-i18n="opt_full">Full restore</b><br>
+          <small data-i18n="opt_full_sub">Replaces add-ons too. If this add-on is not in the backup, the restore may remove it.</small></span></label>
+      </fieldset>
+      <div id="keyRow" class="hidden">
+        <label for="key" data-i18n="key_label">Encryption key (Emergency kit)</label>
+        <input id="key" type="password" autocomplete="off" spellcheck="false">
+      </div>
+      <label class="opt confirm"><input id="sure" type="checkbox">
+        <span data-i18n="sure">I understand the backup will overwrite the current data.</span></label>
+      <p id="mErr" class="err"></p>
+      <div class="actions end">
+        <button id="mCancel" class="btn" type="button" data-i18n="cancel">Cancel</button>
+        <button id="mGo" class="btn primary" type="button" disabled data-i18n="start_restore">Start restore</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

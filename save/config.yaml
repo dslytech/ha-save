@@ -1,0 +1,23 @@
+name: "SAVE"
+version: "1.0.1"
+slug: backup_rescue
+description: "Standalone web UI to upload and restore backups, view logs and restart the core, even when Home Assistant core is down."
+url: "https://github.com/dslytech/ha-save"
+arch:
+  - aarch64
+  - amd64
+  - armv7
+  - armhf
+  - i386
+startup: system
+boot: auto
+hassio_api: true
+hassio_role: manager
+map:
+  - type: backup
+    read_only: false
+ports:
+  4360/tcp: 4360
+ports_description:
+  4360/tcp: "SAVE web interface"
+watchdog: "http://[HOST]:[PORT:4360]/health"
